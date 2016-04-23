@@ -63,4 +63,5 @@ dependencies {
     androidTestCompile 'com.android.support:support-annotations:23.2.0'
     androidTestCompile 'com.android.support.test:runner:0.4.1'
     androidTestCompile 'com.android.support.test:rules:0.4.1'
+    compile files('C:/Users/amade/Documents/GitHub/muzikhack/MusicPlayerSample/libs/mza-2.0.2.jar')
 }
