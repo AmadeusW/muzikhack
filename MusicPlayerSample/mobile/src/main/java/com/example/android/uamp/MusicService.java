@@ -47,6 +47,9 @@ import com.example.android.uamp.utils.WearHelper;
 import com.google.android.gms.cast.ApplicationMetadata;
 import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
 import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumerImpl;
+import com.muzik.accessory.MzAccessory;
+import com.muzik.accessory.MzConnectionState;
+import com.muzik.accessory.callback.IMzConnectionStateCallback;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -262,6 +265,39 @@ public class MusicService extends MediaBrowserServiceCompat implements
         mMediaRouter = MediaRouter.getInstance(getApplicationContext());
 
         registerCarConnectionReceiver();
+
+
+        MzAccessory mza = new MzAccessory();
+        mza.startServer();
+        mza.registerForConnectionState(new IMzConnectionStateCallback() {
+            @Override
+            public void onConnectionStateChange(MzConnectionState mzConnectionState) {
+                switch (mzConnectionState)
+                {
+                    case HEADPHONES_CONNECTED:
+                        onConnect();
+                        break;
+                    case HEADPHONES_NOT_CONNECTED:
+                        LogHelper.d(TAG, "Headphones are not connected...");
+                        break;
+                    case BLUETOOTH_NOT_ENABLED:
+                        LogHelper.d(TAG, "Bluetooth not enabled.");
+                        break;
+                    case NO_BLUETOOTH_SUPPORT:
+                        LogHelper.d(TAG, "This is an old phone...");
+                        break;
+                    case INTERNAL_ERROR:
+                        LogHelper.d(TAG, "Oopsie!");
+                        break;
+                }
+            }
+
+            public void onConnect() {
+                // Have fun!
+                LogHelper.d(TAG, "Have fun!");
+            }
+        });
+
     }
 
     /**

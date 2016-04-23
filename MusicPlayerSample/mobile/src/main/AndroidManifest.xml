@@ -153,6 +153,7 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.MusicPlayerActivity"/>
+
         </activity>
 
         <!-- A receiver that will receive media buttons and send as
@@ -166,5 +167,6 @@
         </receiver>
 
     </application>
-
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 </manifest>
