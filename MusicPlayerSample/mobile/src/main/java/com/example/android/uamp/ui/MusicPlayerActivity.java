@@ -22,9 +22,17 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.media.MediaBrowserCompat;
 import android.text.TextUtils;
+import android.util.Log;
+import android.widget.TextView;
 
 import com.example.android.uamp.R;
+import com.example.android.uamp.muzik.SwipeBackCallback;
+import com.example.android.uamp.muzik.SwipeForwardCallback;
 import com.example.android.uamp.utils.LogHelper;
+import com.muzik.accessory.MzAccessory;
+import com.muzik.accessory.MzConnectionState;
+import com.muzik.accessory.MzGesture;
+import com.muzik.accessory.callback.IMzConnectionStateCallback;
 
 /**
  * Main activity for the music player.
@@ -66,6 +74,8 @@ public class MusicPlayerActivity extends BaseActivity
         if (savedInstanceState == null) {
             startFullScreenActivityIfNeeded(getIntent());
         }
+
+        createHackatonStuff();
     }
 
     @Override
@@ -182,5 +192,84 @@ public class MusicPlayerActivity extends BaseActivity
             mVoiceSearchParams = null;
         }
         getBrowseFragment().onConnected();
+    }
+
+
+
+    private void createHackatonStuff() {
+        final TextView ourTextView = (TextView) findViewById(R.id.bpmView);
+
+        MzAccessory mza = new MzAccessory();
+        mza.startServer();
+        mza.registerForConnectionState(new IMzConnectionStateCallback() {
+            @Override
+            public void onConnectionStateChange(MzConnectionState mzConnectionState) {
+                switch (mzConnectionState)
+                {
+                    case HEADPHONES_CONNECTED:
+                        onConnect();
+                        break;
+                    case HEADPHONES_NOT_CONNECTED:
+                        LogHelper.d(TAG, "Headphones are not connected...");
+                        break;
+                    case BLUETOOTH_NOT_ENABLED:
+                        LogHelper.d(TAG, "Bluetooth not enabled.");
+                        break;
+                    case NO_BLUETOOTH_SUPPORT:
+                        LogHelper.d(TAG, "This is an old phone...");
+                        break;
+                    case INTERNAL_ERROR:
+                        LogHelper.d(TAG, "Oopsie!");
+                        break;
+                }
+            }
+
+            public void onConnect() {
+                // Have fun!
+                LogHelper.d(TAG, "Have fun!");
+                MusicPlayerActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final TextView ourTextView = (TextView) findViewById(R.id.bpmView);
+                        ourTextView.setText("Ready");
+                    }
+                });
+            }
+        });
+
+        Log.d(TAG, "registering");
+        mza.registerForGestures(new SwipeForwardCallback(this), MzGesture.SWIPE_FORWARD);
+        mza.registerForGestures(new SwipeBackCallback(this), MzGesture.SWIPE_BACK);
+        Log.d(TAG, "registered");
+    }
+
+    volatile int currentBpm;
+
+    public void IncreaseCallback() {
+        Log.d(TAG, "increaseCallback");
+        if (currentBpm < 170)
+            currentBpm += 10;
+
+        MusicPlayerActivity.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                final TextView ourTextView = (TextView) findViewById(R.id.bpmView);
+                ourTextView.setText(Integer.toString(currentBpm) + " BPM");
+            }
+        });
+    }
+
+    public void DecreaseCallback() {
+        Log.d(TAG, "decreaseCallback");
+        if (currentBpm > 60)
+            currentBpm -= 10;
+
+        MusicPlayerActivity.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                final TextView ourTextView = (TextView) findViewById(R.id.bpmView);
+                ourTextView.setText(Integer.toString(currentBpm) + " BPM");
+            }
+        });
     }
 }
