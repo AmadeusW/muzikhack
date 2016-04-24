@@ -306,22 +306,26 @@ public class PlaybackManager implements Playback.Callback {
         @Override
         public void onSkipToNext() {
             LogHelper.d(TAG, "skipToNext");
+            /*
             if (mQueueManager.skipQueuePosition(1)) {
                 handlePlayRequest();
             } else {
                 handleStopRequest("Cannot skip");
             }
             mQueueManager.updateMetadata();
+            */
         }
 
         @Override
         public void onSkipToPrevious() {
+            /*
             if (mQueueManager.skipQueuePosition(-1)) {
                 handlePlayRequest();
             } else {
                 handleStopRequest("Cannot skip");
             }
             mQueueManager.updateMetadata();
+            */
         }
 
         @Override
