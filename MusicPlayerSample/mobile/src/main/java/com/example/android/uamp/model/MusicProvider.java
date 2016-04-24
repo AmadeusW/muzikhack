@@ -61,6 +61,7 @@ public class MusicProvider {
 
     // Categorized caches for music track data:
     private ConcurrentMap<String, List<MediaMetadataCompat>> mMusicListByGenre;
+    private ConcurrentMap<Integer, List<MediaMetadataCompat>> mMusicListByBpm;
     private final ConcurrentMap<String, MutableMediaMetadata> mMusicListById;
 
     private final Set<String> mFavoriteTracks;
@@ -82,6 +83,7 @@ public class MusicProvider {
         mSource = source;
         mMusicListByGenre = new ConcurrentHashMap<>();
         mMusicListById = new ConcurrentHashMap<>();
+        mMusicListByBpm = new ConcurrentHashMap<>();
         mFavoriteTracks = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
     }
 
@@ -122,6 +124,20 @@ public class MusicProvider {
         }
         return mMusicListByGenre.get(genre);
     }
+
+    /**
+     * Get music tracks of the given bpm
+     *
+     */
+    public Iterable<MediaMetadataCompat> getMusicsByBpm(int bpm) {
+        int roundedBpm = Math.round(bpm / 10) * 10;
+
+        if (mCurrentState != State.INITIALIZED || !mMusicListByBpm.containsKey(roundedBpm)) {
+            return Collections.emptyList();
+        }
+        return mMusicListByGenre.get(roundedBpm);
+    }
+
 
     /**
      * Very basic implementation of a search that filter music tracks with title containing
@@ -242,19 +258,34 @@ public class MusicProvider {
         }.execute();
     }
 
-    private synchronized void buildListsByGenre() {
+    private synchronized void buildLists() {
         ConcurrentMap<String, List<MediaMetadataCompat>> newMusicListByGenre = new ConcurrentHashMap<>();
+        ConcurrentMap<Integer, List<MediaMetadataCompat>> newMusicListByBpm = new ConcurrentHashMap<>();
 
         for (MutableMediaMetadata m : mMusicListById.values()) {
             String genre = m.metadata.getString(MediaMetadataCompat.METADATA_KEY_GENRE);
+            String artist = m.metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+            String title = m.metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+            // API call
+            int bpm = 123;
+            int roundedBpm = Math.round(bpm / 10) * 10;
+
             List<MediaMetadataCompat> list = newMusicListByGenre.get(genre);
             if (list == null) {
                 list = new ArrayList<>();
                 newMusicListByGenre.put(genre, list);
             }
             list.add(m.metadata);
+
+            List<MediaMetadataCompat> listBpm = newMusicListByBpm.get(roundedBpm);
+            if (listBpm == null) {
+                listBpm = new ArrayList<>();
+                newMusicListByBpm.put(roundedBpm, list);
+            }
+            listBpm.add(m.metadata);
         }
         mMusicListByGenre = newMusicListByGenre;
+        mMusicListByBpm = newMusicListByBpm;
     }
 
     private synchronized void retrieveMedia() {
@@ -266,12 +297,9 @@ public class MusicProvider {
                 while (tracks.hasNext()) {
                     MediaMetadataCompat item = tracks.next();
                     String musicId = item.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
-                    String artist = item.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
-                    String song = item.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
-                    String genre = item.getString(MediaMetadataCompat.METADATA_KEY_GENRE);
                     mMusicListById.put(musicId, new MutableMediaMetadata(musicId, item));
                 }
-                buildListsByGenre();
+                buildLists();
                 mCurrentState = State.INITIALIZED;
             }
         } finally {
