@@ -266,6 +266,9 @@ public class MusicProvider {
                 while (tracks.hasNext()) {
                     MediaMetadataCompat item = tracks.next();
                     String musicId = item.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
+                    String artist = item.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+                    String song = item.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+                    String genre = item.getString(MediaMetadataCompat.METADATA_KEY_GENRE);
                     mMusicListById.put(musicId, new MutableMediaMetadata(musicId, item));
                 }
                 buildListsByGenre();
